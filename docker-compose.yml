@@ -1,0 +1,38 @@
+version: "3"
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: dockerfile
+    container_name: client
+    expose:
+      - "80"
+    networks:
+      - app-network
+
+  api:
+    build:
+      context: ./api
+      dockerfile: dockerfile
+    container_name: api
+    expose:
+      - "3000"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - client
+      - api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
