@@ -7,7 +7,8 @@
     "dev": "pnpm -r dev",
     "test:all": "pnpm -r test",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "up-all": "pnpm -r up"
   },
   "keywords": [],
   "author": "",
