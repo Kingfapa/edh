@@ -1,0 +1,100 @@
+.container {
+  display: grid;
+  height: 100%;
+}
+
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.healthButton {
+  flex-basis: 100%;
+  border: none;
+  padding: 0;
+  opacity: 0.2;
+  background-color: gray;
+  color: black;
+  transition: 0.3s;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.strokeme {
+  color: white;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+/* .healthButton:hover {
+  opacity: 0.3;
+  background-color: black;
+  color: white;
+} */
+
+.healthButton:active {
+  opacity: 0.5;
+  background-color: black;
+  color: white;
+  transition: all 0s;
+}
+
+.healthText {
+  font-size: 10em;
+  font-weight: bold;
+  text-align: center;
+}
+
+@media (screen and (max-width: 600px) and orientation: landscape) {
+  .healthText {
+    font-size: 5em;
+  }
+}
+
+/* Portrait Mode */
+@media (orientation: portrait) {
+  .layout-2-players {
+    grid-template-columns: 1fr;
+  }
+  .layout-3-players {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
+  .layout-4-players {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .layout-5-players {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
+  .layout-6-players {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
+}
+
+/* Landscape Mode */
+@media (orientation: landscape) {
+  .layout-2-players {
+    grid-template-columns: 1fr;
+  }
+  .layout-3-players {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+  .layout-4-players {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas: "player-1 player-2" "player-3 player-4";
+  }
+  .layout-5-players {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .layout-6-players {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}

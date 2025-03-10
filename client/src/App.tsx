@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Room } from "./routes/room.tsx";
-import { Home } from "./routes/index.tsx";
+// import { Home } from "./routes/index.tsx";
 import { Box, MantineProvider, Text } from "@mantine/core";
 import "@mantine/core/styles.css";
+import { TablePage } from "./routes/table.page.tsx";
 
 const SocketStatus = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -61,7 +62,7 @@ function App() {
     <MantineProvider>
       <BrowserRouter>
         <Routes>
-          <Route index path="/" element={<Home />} />
+          <Route index path="/" element={<TablePage />} />
           <Route path="/:room" element={<Room />} />
         </Routes>
         <SocketStatus />
