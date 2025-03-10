@@ -13,9 +13,8 @@
   flex-basis: 100%;
   border: none;
   padding: 0;
-  opacity: 0.2;
-  background-color: gray;
-  color: black;
+  background-color: transparent;
+  opacity: 0.3;
   transition: 0.3s;
   touch-action: manipulation;
   cursor: pointer;
@@ -34,15 +33,15 @@
 } */
 
 .healthButton:active {
-  opacity: 0.5;
-  background-color: black;
-  color: white;
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: black;
   transition: all 0s;
 }
 
 .healthText {
   font-size: 10em;
-  font-weight: bold;
+  font-weight: 300;
   text-align: center;
 }
 

@@ -1,9 +1,12 @@
-import { Flex, Text } from "@mantine/core";
-import { useState } from "react";
+import { Flex, Stack, Text } from "@mantine/core";
+import { useEffect, useRef, useState } from "react";
 import "./table.page.css";
 import { clsx } from "clsx";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { IconMenu, IconMinus, IconPlus } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
+import Color from "color";
+import { useDebounce } from "use-debounce";
+import randomColor from "randomcolor";
 
 interface IPlayer {
   id: number;
@@ -12,16 +15,205 @@ interface IPlayer {
   color: string;
 }
 
-const randomColor = () =>
-  "#" + Math.floor(Math.random() * 16777215).toString(16);
+type HealthHandler = (params: IHealthOptions) => void;
 
-export const TablePage = () => {
+interface IHealthOptions {
+  id: number;
+  options: {
+    step: number;
+    operation: "add" | "subtract";
+  };
+}
+
+const PlayerSquare = ({
+  player,
+  side,
+  healthHandler,
+}: {
+  player: IPlayer;
+  side: number;
+  healthHandler: HealthHandler;
+}) => {
   const [sm, md] = [
     useMediaQuery("(max-width: 600px)"),
     useMediaQuery("(max-width: 900px)"),
     useMediaQuery("(max-width: 1200px)"),
   ];
-  const [players, setPlayers] = useState<IPlayer[] | undefined>([
+
+  const CLICK_DURATION_MS = 500; // Time to differentiate between click and hold
+  const HOLD_REPEAT_INTERVAL_MS = 600; // Interval for repeated increments during hold
+  const SINGLE_CLICK_STEP = 1;
+  const HOLD_CLICK_STEP = 10;
+
+  const holdTimeout = useRef<number | null>(null);
+  const holdInterval = useRef<number | null>(null);
+  const isHolding = useRef<boolean>(false);
+  const isLongClick = useRef<boolean>(false);
+
+  useEffect(() => {
+    return () => {
+      if (holdTimeout.current) {
+        clearTimeout(holdTimeout.current);
+      }
+      if (holdInterval.current) {
+        clearInterval(holdInterval.current);
+      }
+    };
+  }, []);
+
+  const clearHold = () => {
+    if (holdTimeout.current) {
+      clearTimeout(holdTimeout.current);
+      holdTimeout.current = null;
+    }
+    if (holdInterval.current) {
+      clearInterval(holdInterval.current);
+      holdInterval.current = null;
+    }
+    isHolding.current = false;
+    isLongClick.current = false;
+  };
+
+  const handleMouseDown = (operation: "add" | "subtract") => {
+    isHolding.current = false;
+    isLongClick.current = false;
+
+    // Start timeout to detect hold
+    holdTimeout.current = window.setTimeout(() => {
+      isHolding.current = true;
+      isLongClick.current = true;
+      holdInterval.current = window.setInterval(() => {
+        healthHandler({
+          id: player.id,
+          options: { step: HOLD_CLICK_STEP, operation },
+        });
+      }, HOLD_REPEAT_INTERVAL_MS);
+    }, CLICK_DURATION_MS);
+  };
+
+  const handleMouseUp = (operation: "add" | "subtract") => {
+    if (!isLongClick.current) {
+      // If released before hold timeout, it was a quick click
+      healthHandler({
+        id: player.id,
+        options: { step: SINGLE_CLICK_STEP, operation },
+      });
+    }
+    clearHold();
+  };
+
+  const handleTouchStart = (operation: "add" | "subtract") => {
+    handleMouseDown(operation);
+  };
+
+  const handleTouchEnd = (operation: "add" | "subtract") => {
+    handleMouseUp(operation);
+  };
+
+  return (
+    <Flex
+      pos={"relative"}
+      style={{
+        width: "100%",
+        height: "100%",
+        transform: `rotate(${side === 2 ? 0 : 180}deg)`,
+        backgroundColor: player.color,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: "10px",
+        overflow: "hidden",
+        boxShadow: "0px 0px 15px 15px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "90% 10%",
+          gap: "0px 0px",
+          gridTemplateAreas: `
+          "buttons"
+          "menu"
+        `,
+        }}
+      >
+        <div
+          style={{
+            gridArea: "buttons",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gridTemplateRows: "1fr",
+            gap: "0px 0px",
+            gridTemplateAreas: `
+            "minus plus"
+          `,
+          }}
+        >
+          <button
+            className={clsx("healthButton")}
+            onMouseDown={() => handleMouseDown("subtract")}
+            onMouseUp={() => handleMouseUp("subtract")}
+            onMouseLeave={clearHold}
+            onTouchStart={() => handleTouchStart("subtract")}
+            onTouchEnd={() => handleTouchEnd("subtract")}
+            onTouchCancel={clearHold}
+          >
+            <IconMinus stroke={2} size={"15%"} />
+          </button>
+          <button
+            className="healthButton"
+            onMouseDown={() => handleMouseDown("add")}
+            onMouseUp={() => handleMouseUp("add")}
+            onMouseLeave={clearHold}
+            onTouchStart={() => handleTouchStart("add")}
+            onTouchEnd={() => handleTouchEnd("add")}
+            onTouchCancel={clearHold}
+          >
+            <IconPlus stroke={2} size={"15%"} />
+          </button>
+        </div>
+        <button
+          style={{
+            gridArea: "menu",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            outline: "none",
+            border: "none",
+            backgroundColor: "transparent",
+            color: "white",
+            cursor: "pointer",
+            boxShadow: "0px 0px 15px 5px rgba(0,0,0,0.1)",
+          }}
+        >
+          <IconMenu
+            onClick={() => console.log(`${player.name} menu clicked`)}
+            stroke={2}
+            size={"100%"}
+          />
+        </button>
+      </div>
+
+      <Text
+        className="healthText prevent-select"
+        style={{
+          zIndex: 2,
+          fontSize: `${sm ? "3rem" : md ? "5rem" : "10rem"}`,
+          color: Color(player.color).isDark() ? "white" : "black",
+          marginBottom: "10%",
+        }}
+      >
+        {player.health}
+      </Text>
+    </Flex>
+  );
+};
+
+export const TablePage = () => {
+  const [players, setPlayers] = useState<IPlayer[]>([
     {
       id: 1,
       name: "Player 1",
@@ -48,19 +240,15 @@ export const TablePage = () => {
     },
   ]);
 
-  console.log(players);
-
-  const updateHealth = (id: number, method: "add" | "decrease") => {
-    console.log("update health", id, method);
-    if (!players) {
-      return;
-    }
-    setPlayers(
-      players.map((player) => {
+  const updateHealth: HealthHandler = ({ id, options }) => {
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player) => {
         if (player.id === id) {
           return {
             ...player,
-            health: player.health + (method === "add" ? 1 : -1),
+            health:
+              player.health +
+              (options.operation === "add" ? options.step : -options.step),
           };
         }
         return player;
@@ -84,62 +272,14 @@ export const TablePage = () => {
           padding: "10px",
         }}
       >
-        {players &&
-          players.map((player, index) => {
-            const side = index < 2 ? 1 : 2;
-            return (
-              <div key={player.id}>
-                <Flex
-                  pos={"relative"}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    transform: `rotate(${side === 2 ? 0 : 180}deg)`,
-                    backgroundColor: player.color,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Flex
-                    pos="absolute"
-                    align="stretch"
-                    justify="stretch"
-                    w="100%"
-                    h="100%"
-                    style={{
-                      zIndex: 1,
-                    }}
-                  >
-                    <button
-                      className="healthButton"
-                      onClick={() => updateHealth(player.id, "add")}
-                    >
-                      <IconPlus stroke={2} size={"15%"} />
-                    </button>
-                    <button
-                      className="healthButton"
-                      onClick={() => updateHealth(player.id, "decrease")}
-                    >
-                      <IconMinus stroke={2} size={"15%"} />
-                    </button>
-                  </Flex>
-
-                  <Text
-                    className="healthText prevent-select strokeme"
-                    style={{
-                      zIndex: 2,
-                      fontWeight: "bold",
-                      fontSize: `${sm ? "3rem" : md ? "5rem" : "10rem"}`,
-                    }}
-                  >
-                    {player.health}
-                  </Text>
-                </Flex>
-              </div>
-            );
-          })}
+        {players.map((player, index) => (
+          <PlayerSquare
+            key={player.id}
+            player={player}
+            side={index < 2 ? 1 : 2}
+            healthHandler={updateHealth}
+          />
+        ))}
       </div>
     </div>
   );
