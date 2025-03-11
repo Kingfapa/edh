@@ -4,15 +4,27 @@ import {
   MinusIcon,
   PlusIcon,
 } from "@radix-ui/react-icons";
-import { Box, Button, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
+import {
+  Button,
+  Card,
+  Container,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import randomColor from "randomcolor";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import "./table2.page.css";
+import { useLongPress } from "@uidotdev/usehooks";
+import { useDebounce } from "use-debounce";
 
 interface IPlayer {
   id: number;
   name: string;
   health: number;
   color: string;
+  previousHealth?: number;
 }
 
 const createPlayer = (id: number): IPlayer => ({
@@ -23,6 +35,7 @@ const createPlayer = (id: number): IPlayer => ({
     format: "rgba",
     alpha: 0.4,
   }),
+  previousHealth: 0,
 });
 
 type HealthHandler = (args: {
@@ -52,32 +65,33 @@ export const Table2Page = () => {
   };
 
   return (
-    <Box
+    <Container
       // style={{
       //   backgroundImage: `url("https://www.wallpaperhub.app/_next/image?url=https%3A%2F%2Fcdn.wallpaperhub.app%2Fcloudcache%2Fb%2Fd%2F7%2F6%2F4%2Fb%2Fbd764bb25d49a05105060185774ba14cd2c846f7.jpg&w=4500&q=100")`,
       // }}
+      maxWidth={"1400px"}
       height={"100vh"}
-      p={"5px"}
     >
       <Grid
         height={"100%"}
         columns={(players.length / 2).toString()}
         rows={"1fr 1fr"}
         gap="10px"
+        p={"1%"}
       >
         {players.map((player, index) => {
-          const side = index < 2 ? 1 : 2;
           return (
             <PlayerSquare
               key={player.id}
               player={player}
-              side={side}
+              index={index}
               updateHealth={updateHealth}
+              players={players}
             />
           );
         })}
       </Grid>
-      {/* <Flex height={"100%"}>
+      {/* <Flex height={"100%"} wrap={"wrap"}>
         {players.map((player, index) => {
           const side = index < 2 ? 1 : 2;
           return (
@@ -96,25 +110,36 @@ export const Table2Page = () => {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          padding: "1%",
         }}
         variant="solid"
       >
         <HamburgerMenuIcon height={"calc(10px + 1vmin)"} width={"100%"} />
       </Button>
-    </Box>
+    </Container>
   );
 };
 
 export const PlayerSquare = ({
   player,
-  side,
+  index,
   updateHealth,
+  players,
 }: {
   player: IPlayer;
-  side: number;
+  players: IPlayer[];
+  index: number;
   updateHealth: HealthHandler;
 }) => {
+  const [debouncedHealth] = useDebounce(player.health, 2000);
+  // Calculate the rotation of the player square
+  const rotation = (() => {
+    if (players.length === 2) {
+      return (index + 1) * 180;
+    }
+    if (players.length === 4) {
+      return (index < 2 ? 1 : 0) * 180;
+    }
+  })();
   return (
     <Card
       style={{
@@ -128,51 +153,140 @@ export const PlayerSquare = ({
         align={"center"}
         justify={"center"}
         height={"100%"}
+        width={"100%"}
         style={{
           borderRadius: "10px",
-          transform: `rotate(${side === 2 ? 0 : 180}deg)`,
+          transform: `rotate(${rotation}deg)`,
           // backgroundColor: player.color,
         }}
       >
-        <Heading
+        <Flex
+          position={"absolute"}
           style={{
-            // color: Color(player.color).isDark() ? "white" : "black",
             fontSize: `calc(10px + 10vmin)`,
-            pointerEvents: "none",
-            WebkitUserSelect: "none",
-            msUserSelect: "none",
-            userSelect: "none",
+            height: "100%",
+            transform: "translateX(-50%)",
+            marginBottom: "10%",
             zIndex: 2,
-            marginBottom: "calc(10px + 5vmin)",
           }}
+          justify={"center"}
+          align={"center"}
+          left={"20%"}
+          className="prevent-select"
         >
-          {player.id}
-        </Heading>
+          <MinusIcon
+            style={{
+              height: "calc(10px + 2vmin)",
+              width: "calc(10px + 3vmin)",
+            }}
+          />
+          <Text
+            style={{
+              fontSize: "calc(10px + 3vmin)",
+            }}
+          >
+            {player.health !== debouncedHealth &&
+            player.health < debouncedHealth ? (
+              <Text
+                style={{
+                  fontSize: "calc(10px + 3vmin)",
+                }}
+              >
+                {Math.abs(player.health - debouncedHealth)}
+              </Text>
+            ) : null}
+          </Text>
+        </Flex>
+        <Flex
+          position={"absolute"}
+          style={{
+            fontSize: `calc(10px + 10vmin)`,
+            height: "100%",
+            transform: "translateX(-50%)",
+            marginBottom: "10%",
+            zIndex: 2,
+          }}
+          justify={"center"}
+          align={"center"}
+          left={"50%"}
+          className="prevent-select"
+        >
+          <Heading
+            style={{
+              fontSize: "inherit",
+            }}
+          >
+            {player.health}
+          </Heading>
+        </Flex>
+        <Flex
+          position={"absolute"}
+          style={{
+            fontSize: `calc(10px + 10vmin)`,
+            height: "100%",
+            transform: "translateX(-50%)",
+            marginBottom: "10%",
+            zIndex: 2,
+          }}
+          justify={"center"}
+          align={"center"}
+          left={"80%"}
+          className="prevent-select"
+        >
+          <PlusIcon
+            style={{
+              height: "calc(10px + 2vmin)",
+              width: "calc(10px + 3vmin)",
+            }}
+          />
+
+          <Text
+            style={{
+              fontSize: "calc(10px + 3vmin)",
+            }}
+          >
+            {player.health !== debouncedHealth &&
+            player.health > debouncedHealth ? (
+              <Text
+                style={{
+                  fontSize: "calc(10px + 3vmin)",
+                }}
+              >
+                {player.health - debouncedHealth}
+              </Text>
+            ) : null}
+          </Text>
+        </Flex>
+
         <Grid
           position={"absolute"}
           width={"100%"}
           height={"100%"}
           columns={"1fr"}
-          rows={"90% 9%"}
+          rows={"90% 10%"}
+          p={"5px"}
           areas={`
             "buttons"
             "menu"
           `}
         >
-          <Grid
+          <Flex
+            width={"100%"}
+            justify={"between"}
             style={{
               gridArea: "buttons",
             }}
-            columns={"1fr 1fr"}
-            rows={"1fr"}
-            areas={`
-              "minus plus"
-            `}
           >
             <HealthButton
               count={-10}
               Icon={MinusIcon}
               handleClick={() =>
+                updateHealth({
+                  id: player.id,
+                  options: { step: 1, operation: "subtract" },
+                })
+              }
+              handleLongPress={() =>
                 updateHealth({
                   id: player.id,
                   options: { step: 10, operation: "subtract" },
@@ -185,11 +299,17 @@ export const PlayerSquare = ({
               handleClick={() =>
                 updateHealth({
                   id: player.id,
+                  options: { step: 1, operation: "add" },
+                })
+              }
+              handleLongPress={() =>
+                updateHealth({
+                  id: player.id,
                   options: { step: 10, operation: "add" },
                 })
               }
             />
-          </Grid>
+          </Flex>
           <Button
             style={{
               gridArea: "menu",
@@ -216,34 +336,38 @@ const HealthButton: React.FC<{
   count: number;
   Icon: React.ElementType;
   handleClick: () => void;
-}> = ({ count, Icon, handleClick }) => {
+  handleLongPress: () => void;
+}> = ({ handleClick, handleLongPress }) => {
+  const interval = useRef<number | null>(null);
+  const attrs = useLongPress(
+    () => {
+      interval.current = window.setInterval(handleLongPress, 500);
+    },
+    {
+      onCancel: () => handleClick(),
+      onFinish: () => {
+        if (interval.current) {
+          clearInterval(interval.current);
+        }
+      },
+      threshold: 500,
+    }
+  );
+
   return (
     <Button
-      onClick={handleClick}
+      className="rt-ghost-no-padding"
+      {...attrs}
       // color="gray"
+      size={"1"}
       style={{
         height: "100%",
+        flex: 1,
         zIndex: 1,
         borderRadius: "0px",
         padding: "0px",
       }}
       variant="ghost"
-    >
-      <Flex justify={"center"} align={"center"}>
-        <Icon
-          style={{
-            height: "calc(10px + 2vmin)",
-            width: "calc(10px + 3vmin)",
-          }}
-        />
-        <Text
-          style={{
-            fontSize: "calc(10px + 4vmin)",
-          }}
-        >
-          {Math.abs(count)}
-        </Text>
-      </Flex>
-    </Button>
+    />
   );
 };

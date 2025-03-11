@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Room } from "./routes/room.tsx";
 // import { Home } from "./routes/index.tsx";
-import "@mantine/core/styles.css";
+import "./App.css";
 import { Table2Page } from "./routes/table2.page.tsx";
 import { SocketStatus } from "./components/SocketStatus.tsx";
 

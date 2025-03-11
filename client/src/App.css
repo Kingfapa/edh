@@ -1,0 +1,22 @@
+@layer reset, radix_ui, utils;
+@import "@radix-ui/themes/styles.css" layer(radix_ui);
+
+@layer reset {
+  /* your custom reset styles here..*/
+  html,
+  body {
+    margin: 0;
+  }
+}
+
+@layer utils {
+  /* your custom utility classes here..*/
+  .bg-red-300 {
+    background-color: red;
+  }
+
+  .rt-ghost-no-padding {
+    --button-ghost-padding-x: 0;
+    --button-ghost-padding-y: 0;
+  }
+}
