@@ -59,6 +59,9 @@ io.on("connection", (socket) => {
     });
   }
   socket.emit("users", users);
+  socket.emit("username", socket.data.username);
+
+  socket.emit("message", `Welcome ${socket.data.username} to the chat room!`);
 
   // notify existing users
   socket.broadcast.emit("user connected", {

@@ -14,7 +14,7 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <ThemeProvider attribute={"class"}>
-      <Theme accentColor="grass">
+      <Theme accentColor="crimson">
         <App />
       </Theme>
     </ThemeProvider>

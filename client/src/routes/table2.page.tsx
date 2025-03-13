@@ -14,10 +14,13 @@ import {
   Text,
 } from "@radix-ui/themes";
 import randomColor from "randomcolor";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./table2.page.css";
 import { useLongPress } from "@uidotdev/usehooks";
 import { useDebounce } from "use-debounce";
+import { IconSkull } from "@tabler/icons-react";
+import { socket } from "@/lib/socket";
+import { useParams } from "react-router";
 
 interface IPlayer {
   id: number;
@@ -43,11 +46,49 @@ type HealthHandler = (args: {
   options: { operation: "add" | "subtract"; step: number };
 }) => void;
 
-export const Table2Page = () => {
+const RoomSockets: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const connect = () => {
+    socket.connect();
+  };
+  const disconnect = () => {
+    socket.disconnect();
+  };
+  return (
+    <>
+      <Button onClick={connect}>Connect</Button>
+      <Button onClick={disconnect}>disconnect</Button>
+      {children}
+    </>
+  );
+};
+
+export const Room: React.FC = () => {
   const [players, setPlayers] = useState<IPlayer[]>(
     new Array(4).fill(0).map((_, i) => createPlayer(i + 1))
   );
+  const params = useParams<{ room: string }>();
 
+  useEffect(() => {
+    socket.emit("room:join", params.room);
+
+    return () => {
+      socket.emit("room:leave", params.room);
+    };
+  }, [params.room]);
+
+  return (
+    <>
+      <RoomSockets>
+        <Table players={players} setPlayers={setPlayers} />
+      </RoomSockets>
+    </>
+  );
+};
+
+const Table: React.FC<{
+  players: IPlayer[];
+  setPlayers: React.Dispatch<React.SetStateAction<IPlayer[]>>;
+}> = ({ players, setPlayers }) => {
   const updateHealth: HealthHandler = ({ id, options }) => {
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) => {
@@ -216,7 +257,7 @@ export const PlayerSquare = ({
               fontSize: "inherit",
             }}
           >
-            {player.health}
+            {player.health > 0 ? player.health : <IconSkull size="lg" />}
           </Heading>
         </Flex>
         <Flex

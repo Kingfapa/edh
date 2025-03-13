@@ -7,11 +7,6 @@ export const SocketStatus: React.FC = () => {
   const [transport, setTransport] = useState("N/A");
 
   useEffect(() => {
-    console.log("i ran");
-    if (socket.connected) {
-      onConnect();
-    }
-
     function onConnect() {
       setIsConnected(true);
       setTransport(socket.io.engine.transport.name);
@@ -27,7 +22,7 @@ export const SocketStatus: React.FC = () => {
     }
 
     socket.on("connect", () => {
-      console.log("i am connected");
+      onConnect();
     });
     socket.on("disconnect", onDisconnect);
 

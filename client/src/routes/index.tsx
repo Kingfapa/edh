@@ -1,32 +1,21 @@
-import { Chat } from "@/components/Chat";
-import { SelectUsername } from "@/components/SelectUsername";
-import { socket } from "@/lib/socket";
-import { useEffect, useState } from "react";
+import { Login } from "@/components/Login";
+import { Box, Container, Flex, Heading } from "@radix-ui/themes";
 
-export const Home = () => {
-  const [usernameAlreadySelected, setUsernameAlreadySelected] = useState(false);
-
-  useEffect(() => {
-    socket.on("connect_error", (err) => {
-      if (err.message === "invalid username") {
-        setUsernameAlreadySelected(false);
-      }
-    });
-
-    return () => {
-      socket.off("connect_error");
-    };
-  }, []);
-
+export const Home: React.FC = () => {
   return (
-    (!usernameAlreadySelected && (
-      <SelectUsername
-        onSubmit={(username) => {
-          setUsernameAlreadySelected(true);
-          socket.auth = { username };
-          socket.connect();
+    <Container pt="10%">
+      <Box
+        py="8"
+        style={{
+          backgroundColor: "var(--gray-a2)",
+          borderRadius: "var(--radius-3)",
         }}
-      />
-    )) || <Chat />
+      >
+        <Flex align={"center"} justify={"center"} direction={"column"} gap="8">
+          <Heading>Welcome to the EDH Rooms!</Heading>
+          <Login />
+        </Flex>
+      </Box>
+    </Container>
   );
 };
